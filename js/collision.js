@@ -166,7 +166,6 @@ class CollisionManager {
                     break;
                     
                 case 'player-enemy':
-                    enemiesToRemove.add(collision.enemyIndex);
                     this.game.player.takeDamage(20);
                     
                     if (this.game.player.health <= 0) {

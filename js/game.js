@@ -67,10 +67,6 @@ class Game {
             }
         });
 
-        // 调试信息：显示敌人数量
-        if (Math.floor(this.lastTime / 1000) % 2 === 0) {
-            console.log('敌人数量:', this.enemies.length, '生成器计时:', this.enemySpawner.spawnTimer.toFixed(2));
-        }
 
         // 更新子弹
         this.bullets.forEach((bullet, index) => {
@@ -128,6 +124,7 @@ class Game {
         this.enemies.forEach(enemy => enemy.render(this.ctx));
 
 
+
         // 绘制玩家
         this.player.render(this.ctx);
 
@@ -163,8 +160,11 @@ class Game {
 
         // 绘制波次信息
         this.ctx.fillText(`波次: ${this.enemySpawner.wave}`, 20, 120);
-        const waveTimeLeft = this.enemySpawner.waveDuration - this.enemySpawner.waveTimer;
-        this.ctx.fillText(`下一波: ${waveTimeLeft.toFixed(1)}秒`, 20, 140);
+        // 确保waveDuration和waveTimer是有效数值
+        const waveDuration = isFinite(this.enemySpawner.waveDuration) ? this.enemySpawner.waveDuration : 30;
+        const waveTimer = isFinite(this.enemySpawner.waveTimer) ? this.enemySpawner.waveTimer : 0;
+        const waveTimeLeft = waveDuration - waveTimer;
+        this.ctx.fillText(`下一波: ${isFinite(waveTimeLeft) ? waveTimeLeft.toFixed(1) : '0.0'}秒`, 20, 140);
     }
 
 
@@ -204,9 +204,6 @@ class Game {
 
         // 难度等级基于时间和分数计算
         this.difficultyLevel = 1 + Math.floor(timeElapsed / 30) + Math.floor(this.score / 500);
-
-        // 调整敌人生成间隔
-        this.enemySpawner.spawnInterval = Math.max(0.5, 2 - this.difficultyLevel * 0.1);
 
         // 调整敌人属性
         this.enemySpawner.difficulty = this.difficultyLevel;
