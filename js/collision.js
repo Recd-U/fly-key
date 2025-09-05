@@ -118,12 +118,40 @@ class CollisionManager {
                 });
             }
         }
+        
+        // 玩家与敌人子弹碰撞
+        if (this.game.enemyBullets) {
+            for (let i = this.game.enemyBullets.length - 1; i >= 0; i--) {
+                if (checkCollision(this.game.player, this.game.enemyBullets[i])) {
+                    this.collisions.push({
+                        type: 'player-enemy-bullet',
+                        bulletIndex: i
+                    });
+                }
+            }
+        }
+        
+        // 子弹与敌人子弹碰撞（可选功能）
+        if (this.game.bullets && this.game.enemyBullets) {
+            for (let i = this.game.bullets.length - 1; i >= 0; i--) {
+                for (let j = this.game.enemyBullets.length - 1; j >= 0; j--) {
+                    if (checkCollision(this.game.bullets[i], this.game.enemyBullets[j])) {
+                        this.collisions.push({
+                            type: 'bullet-enemy-bullet',
+                            playerBulletIndex: i,
+                            enemyBulletIndex: j
+                        });
+                    }
+                }
+            }
+        }
     }
     
     // 处理所有碰撞
     handleCollisions() {
         const bulletsToRemove = new Set();
         const enemiesToRemove = new Set();
+        const enemyBulletsToRemove = new Set();
         
         for (const collision of this.collisions) {
             switch (collision.type) {
@@ -147,12 +175,31 @@ class CollisionManager {
                         document.getElementById('final-score').textContent = this.game.score;
                     }
                     break;
+                    
+                case 'player-enemy-bullet':
+                    enemyBulletsToRemove.add(collision.bulletIndex);
+                    this.game.player.takeDamage(this.game.enemyBullets[collision.bulletIndex].damage);
+                    
+                    if (this.game.player.health <= 0) {
+                        this.game.gameOver = true;
+                        document.getElementById('game-over').classList.remove('hidden');
+                        document.getElementById('final-score').textContent = this.game.score;
+                    }
+                    break;
+                    
+                case 'bullet-enemy-bullet':
+                    bulletsToRemove.add(collision.playerBulletIndex);
+                    enemyBulletsToRemove.add(collision.enemyBulletIndex);
+                    break;
             }
         }
         
         // 移除碰撞的对象
         this.removeObjects(bulletsToRemove, this.game.bullets);
         this.removeObjects(enemiesToRemove, this.game.enemies);
+        if (this.game.enemyBullets) {
+            this.removeObjects(enemyBulletsToRemove, this.game.enemyBullets);
+        }
         
         // 更新UI
         this.game.updateUI();
