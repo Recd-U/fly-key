@@ -7,10 +7,13 @@ class Game {
         this.bullets = [];
         this.score = 0;
         this.gameOver = false;
+        this.isPaused = false; // 暂停状态
         this.lastTime = 0;
         this.deltaTime = 0;
         this.enemySpawner = new EnemySpawner(this);
         this.collisionManager = new CollisionManager(this);
+        this.gameStartTime = Date.now(); // 游戏开始时间
+        this.difficultyLevel = 1; // 当前难度等级
         
         this.init();
     }
@@ -22,7 +25,14 @@ class Game {
     }
     
     setupEventListeners() {
-        document.addEventListener('keydown', (e) => handleInput(e, true));
+        document.addEventListener('keydown', (e) => {
+            // 处理暂停键（P 或 Esc）
+            if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                this.togglePause();
+                return;
+            }
+            handleInput(e, true);
+        });
         document.addEventListener('keyup', (e) => handleInput(e, false));
         document.getElementById('restart-btn').addEventListener('click', () => this.restart());
     }
@@ -32,7 +42,8 @@ class Game {
         this.deltaTime = (timestamp - this.lastTime) / 1000;
         this.lastTime = timestamp;
         
-        if (!this.gameOver) {
+        // 如果游戏未结束且未暂停，则更新游戏状态
+        if (!this.gameOver && !this.isPaused) {
             this.update();
             this.render();
         }
@@ -65,6 +76,9 @@ class Game {
         // 检测碰撞
         this.collisionManager.checkAllCollisions();
         this.collisionManager.handleCollisions();
+        
+        // 更新游戏难度
+        this.updateDifficulty();
     }
     
     render() {
@@ -82,6 +96,20 @@ class Game {
         
         // 绘制子弹
         this.bullets.forEach(bullet => bullet.render(this.ctx));
+        
+        // 如果游戏暂停，显示暂停界面
+        if (this.isPaused) {
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            this.ctx.font = '48px Arial';
+            this.ctx.fillStyle = 'white';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('游戏暂停', this.canvas.width / 2, this.canvas.height / 2);
+            
+            this.ctx.font = '24px Arial';
+            this.ctx.fillText('按 P 或 Esc 继续', this.canvas.width / 2, this.canvas.height / 2 + 50);
+        }
     }
     
 
@@ -91,12 +119,42 @@ class Game {
         document.getElementById('health').textContent = `生命值: ${this.player.health}`;
     }
     
+    // 更新游戏难度
+    updateDifficulty() {
+        // 根据游戏时间和分数动态调整难度
+        const timeElapsed = (Date.now() - this.gameStartTime) / 1000; // 已经过的时间（秒）
+        
+        // 难度等级基于时间和分数计算
+        this.difficultyLevel = 1 + Math.floor(timeElapsed / 30) + Math.floor(this.score / 500);
+        
+        // 调整敌人生成间隔
+        this.enemySpawner.spawnInterval = Math.max(0.5, 2 - this.difficultyLevel * 0.1);
+        
+        // 调整敌人属性
+        this.enemySpawner.difficulty = this.difficultyLevel;
+    }
+    
+    // 暂停/继续游戏
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        if (this.isPaused) {
+            // 暂停时的处理
+            console.log('游戏已暂停');
+        } else {
+            // 继续时的处理
+            console.log('游戏继续');
+        }
+    }
+    
     restart() {
         this.player = new Player(this.canvas.width / 2, this.canvas.height - 100, this);
         this.enemies = [];
         this.bullets = [];
         this.score = 0;
         this.gameOver = false;
+        this.isPaused = false;
+        this.gameStartTime = Date.now(); // 重置游戏开始时间
+        this.difficultyLevel = 1; // 重置难度等级
         document.getElementById('game-over').classList.add('hidden');
         this.updateUI();
     }
@@ -104,5 +162,5 @@ class Game {
 
 // 启动游戏
 document.addEventListener('DOMContentLoaded', () => {
-    new Game();
+    window.game = new Game();
 });

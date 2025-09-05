@@ -23,8 +23,8 @@ class Player {
         if (this.isMovingDown) this.y += this.speed * deltaTime;
         
         // 边界检查
-        this.x = Math.max(0, Math.min(this.x, game.canvas.width - this.width));
-        this.y = Math.max(0, Math.min(this.y, game.canvas.height - this.height));
+        this.x = Math.max(0, Math.min(this.x, this.game.canvas.width - this.width));
+        this.y = Math.max(0, Math.min(this.y, this.game.canvas.height - this.height));
         
         // 射击冷却
         if (this.shootCooldown > 0) {
