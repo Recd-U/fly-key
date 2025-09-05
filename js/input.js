@@ -70,10 +70,12 @@ class InputSystem {
         this.isTouching = false;
         
         // 重置移动状态
-        game.player.isMovingLeft = false;
-        game.player.isMovingRight = false;
-        game.player.isMovingUp = false;
-        game.player.isMovingDown = false;
+        if (window.currentGame && window.currentGame.player) {
+            window.currentGame.player.isMovingLeft = false;
+            window.currentGame.player.isMovingRight = false;
+            window.currentGame.player.isMovingUp = false;
+            window.currentGame.player.isMovingDown = false;
+        }
     }
     
     handleMouseDown(event) {
@@ -97,10 +99,12 @@ class InputSystem {
         this.isTouching = false;
         
         // 重置移动状态
-        game.player.isMovingLeft = false;
-        game.player.isMovingRight = false;
-        game.player.isMovingUp = false;
-        game.player.isMovingDown = false;
+        if (window.currentGame && window.currentGame.player) {
+            window.currentGame.player.isMovingLeft = false;
+            window.currentGame.player.isMovingRight = false;
+            window.currentGame.player.isMovingUp = false;
+            window.currentGame.player.isMovingDown = false;
+        }
     }
     
     update() {
@@ -109,13 +113,13 @@ class InputSystem {
     }
     
     handleKeyboardInput() {
-        if (!game.player) return;
+        if (!window.currentGame || !window.currentGame.player) return;
         
         // 移动控制
-        game.player.isMovingLeft = this.keys['ArrowLeft'] || this.keys['KeyA'];
-        game.player.isMovingRight = this.keys['ArrowRight'] || this.keys['KeyD'];
-        game.player.isMovingUp = this.keys['ArrowUp'] || this.keys['KeyW'];
-        game.player.isMovingDown = this.keys['ArrowDown'] || this.keys['KeyS'];
+        window.currentGame.player.isMovingLeft = this.keys['ArrowLeft'] || this.keys['KeyA'];
+        window.currentGame.player.isMovingRight = this.keys['ArrowRight'] || this.keys['KeyD'];
+        window.currentGame.player.isMovingUp = this.keys['ArrowUp'] || this.keys['KeyW'];
+        window.currentGame.player.isMovingDown = this.keys['ArrowDown'] || this.keys['KeyS'];
         
         // 特殊功能键
         if (this.keys['Space'] || this.keys['KeyJ']) {
@@ -132,7 +136,7 @@ class InputSystem {
     }
     
     handleTouchInput() {
-        if (!this.isTouching || !game.player) return;
+        if (!this.isTouching || !window.currentGame || !window.currentGame.player) return;
         
         const sensitivity = 2.0; // 触摸灵敏度
         const deadZone = 20; // 死区范围
@@ -143,29 +147,29 @@ class InputSystem {
         // 水平移动
         if (Math.abs(deltaX) > deadZone) {
             if (deltaX > 0) {
-                game.player.isMovingRight = true;
-                game.player.isMovingLeft = false;
+                window.currentGame.player.isMovingRight = true;
+                window.currentGame.player.isMovingLeft = false;
             } else {
-                game.player.isMovingLeft = true;
-                game.player.isMovingRight = false;
+                window.currentGame.player.isMovingLeft = true;
+                window.currentGame.player.isMovingRight = false;
             }
         } else {
-            game.player.isMovingLeft = false;
-            game.player.isMovingRight = false;
+            window.currentGame.player.isMovingLeft = false;
+            window.currentGame.player.isMovingRight = false;
         }
         
         // 垂直移动
         if (Math.abs(deltaY) > deadZone) {
             if (deltaY > 0) {
-                game.player.isMovingDown = true;
-                game.player.isMovingUp = false;
+                window.currentGame.player.isMovingDown = true;
+                window.currentGame.player.isMovingUp = false;
             } else {
-                game.player.isMovingUp = true;
-                game.player.isMovingDown = false;
+                window.currentGame.player.isMovingUp = true;
+                window.currentGame.player.isMovingDown = false;
             }
         } else {
-            game.player.isMovingUp = false;
-            game.player.isMovingDown = false;
+            window.currentGame.player.isMovingUp = false;
+            window.currentGame.player.isMovingDown = false;
         }
         
         // 更新触摸起始位置，实现相对移动
@@ -195,11 +199,11 @@ class InputSystem {
         this.keys = {};
         this.isTouching = false;
         
-        if (game.player) {
-            game.player.isMovingLeft = false;
-            game.player.isMovingRight = false;
-            game.player.isMovingUp = false;
-            game.player.isMovingDown = false;
+        if (window.currentGame && window.currentGame.player) {
+            window.currentGame.player.isMovingLeft = false;
+            window.currentGame.player.isMovingRight = false;
+            window.currentGame.player.isMovingUp = false;
+            window.currentGame.player.isMovingDown = false;
         }
     }
 }
