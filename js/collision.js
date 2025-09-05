@@ -67,18 +67,23 @@ function checkBulletEnemyCollision(bullet, enemy) {
 
 // 玩家与敌人碰撞检测
 function checkPlayerEnemyCollision(player, enemy) {
-    // 对于圆形敌人，使用圆形碰撞检测
+    // 对于圆形敌人，使用圆形与矩形碰撞检测
     if (enemy.type === 'basic') {
-        const playerCenterX = player.x + player.width / 2;
-        const playerCenterY = player.y + player.height / 2;
         const enemyCenterX = enemy.x + enemy.width / 2;
         const enemyCenterY = enemy.y + enemy.height / 2;
+        const enemyRadius = enemy.width / 2;
         
-        const dx = playerCenterX - enemyCenterX;
-        const dy = playerCenterY - enemyCenterY;
+        // 检测圆形敌人与矩形玩家的碰撞
+        // 找到矩形上距离圆心最近的点
+        const closestX = Math.max(player.x, Math.min(enemyCenterX, player.x + player.width));
+        const closestY = Math.max(player.y, Math.min(enemyCenterY, player.y + player.height));
+        
+        // 计算最近点与圆心的距离
+        const dx = enemyCenterX - closestX;
+        const dy = enemyCenterY - closestY;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        return distance < (player.width / 2 + enemy.width / 2);
+        return distance < enemyRadius;
     }
     
     // 对于其他类型的敌人，使用矩形碰撞检测

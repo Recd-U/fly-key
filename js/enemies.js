@@ -74,9 +74,9 @@ class Enemy {
 
     setMovementPattern() {
         const patterns = [
-            () => this.straightDown(),
-            () => this.sineWave(),
-            () => this.zigzag()
+            (deltaTime) => this.straightDown(deltaTime),
+            (deltaTime) => this.sineWave(deltaTime),
+            (deltaTime) => this.zigzag(deltaTime)
         ];
 
         this.pattern = patterns[Math.floor(Math.random() * patterns.length)];
@@ -530,7 +530,7 @@ class EnemySpawner {
         }
 
         // BOSS生成逻辑
-        if (!this.bossSpawned && this.game.score >= 1000 && Math.random() < 0.1) {
+        if (!this.bossSpawned && this.wave >= 3 && Math.random() < 0.3) {
             this.spawnBoss();
             return;
         }
@@ -619,12 +619,20 @@ class EnemySpawner {
     }
 
     updateWave(deltaTime) {
+        // 确保deltaTime是有效数值
+        if (typeof deltaTime !== 'number' || isNaN(deltaTime) || deltaTime <= 0) {
+            return;
+        }
+
         this.waveTimer += deltaTime;
 
         if (this.waveTimer >= this.waveDuration) {
             this.wave++;
             this.waveTimer = 0;
             this.waveDuration = Math.max(20, 30 - (this.wave - 1) * 2); // 波次时间递减
+            
+            // 每波开始时重置BOSS生成标志
+            this.bossSpawned = false;
 
             // 波次开始特效
             this.createWaveStartEffect();

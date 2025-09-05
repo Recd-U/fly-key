@@ -19,6 +19,9 @@ class Game {
         // 设置全局引用
         window.currentGame = this;
 
+        // 初始化游戏开始时间
+        this.gameStartTime = Date.now();
+        this.difficultyLevel = 1;
 
         this.init();
     }
