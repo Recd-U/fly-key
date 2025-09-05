@@ -127,8 +127,11 @@ class InputSystem {
         }
         
         // 暂停游戏
-        if (this.keys['Escape'] || this.keys['KeyP']) {
-            // 实现暂停功能
+        if ((this.keys['Escape'] || this.keys['KeyP']) && game) {
+            game.togglePause();
+            // 防止重复触发
+            this.keys['Escape'] = false;
+            this.keys['KeyP'] = false;
         }
     }
     
