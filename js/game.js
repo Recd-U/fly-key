@@ -23,6 +23,10 @@ class Game {
         this.gameStartTime = Date.now();
         this.difficultyLevel = 1;
 
+        // 波次结束提示相关属性
+        this.showWaveEndMessage = false;
+        this.waveEndMessage = "";
+
         this.init();
     }
 
@@ -168,6 +172,15 @@ class Game {
         const waveTimer = isFinite(this.enemySpawner.waveTimer) ? this.enemySpawner.waveTimer : 0;
         const waveTimeLeft = waveDuration - waveTimer;
         this.ctx.fillText(`下一波: ${isFinite(waveTimeLeft) ? waveTimeLeft.toFixed(1) : '0.0'}秒`, 20, 140);
+
+        // 绘制波次结束倒计时消息
+        if (this.showWaveEndMessage) {
+            this.ctx.fillStyle = '#ffff00';
+            this.ctx.font = 'bold 20px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(this.waveEndMessage, this.canvas.width / 2, this.canvas.height / 2 - 50);
+            this.ctx.textAlign = 'left';
+        }
     }
 
 

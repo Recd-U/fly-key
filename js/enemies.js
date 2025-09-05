@@ -493,11 +493,17 @@ class EnemySpawner {
         this.wave = 1;
         this.waveTimer = 0;
         this.waveDuration = 30; // 每波持续时间（秒）
+        this.waveEndTimer = 0; // 波次结束倒计时
     }
 
     update(deltaTime) {
         // 确保deltaTime是有效数值
         if (typeof deltaTime !== 'number' || isNaN(deltaTime) || deltaTime <= 0) {
+            return;
+        }
+
+        // 波次倒计时期间停止敌人生成
+        if (this.waveEndTimer > 0) {
             return;
         }
 
@@ -627,15 +633,42 @@ class EnemySpawner {
         this.waveTimer += deltaTime;
 
         if (this.waveTimer >= this.waveDuration) {
-            this.wave++;
+            // 波次结束，开始3秒倒计时
+            this.waveEndTimer = 3.0;
             this.waveTimer = 0;
-            this.waveDuration = Math.max(20, 30 - (this.wave - 1) * 2); // 波次时间递减
             
-            // 每波开始时重置BOSS生成标志
-            this.bossSpawned = false;
-
-            // 波次开始特效
-            this.createWaveStartEffect();
+            // 显示波次结束提示
+            this.game.showWaveEndMessage = true;
+            this.game.waveEndMessage = `第${this.wave}波结束！下一波倒计时：3秒`;
+        }
+        
+        // 处理波次结束倒计时
+        if (this.waveEndTimer > 0) {
+            this.waveEndTimer -= deltaTime;
+            
+            // 更新倒计时消息
+            const countdown = Math.ceil(this.waveEndTimer);
+            this.game.waveEndMessage = `第${this.wave}波结束！下一波倒计时：${countdown}秒`;
+            
+            if (this.waveEndTimer <= 0) {
+                // 倒计时结束，开始新波次
+                this.wave++;
+                this.waveEndTimer = 0;
+                this.waveDuration = Math.max(15, 30 - (this.wave - 1) * 2); // 波次时间递减
+                
+                // 每波开始时重置BOSS生成标志
+                this.bossSpawned = false;
+                
+                // 隐藏波次结束提示
+                this.game.showWaveEndMessage = false;
+                
+                // 波次开始特效
+                this.createWaveStartEffect();
+                
+                // 增加难度：减少生成间隔，增加敌人属性
+                this.spawnInterval = Math.max(0.5, 2 - (this.wave - 1) * 0.1);
+                this.difficulty = 1 + Math.floor(this.wave / 2);
+            }
         }
     }
 
