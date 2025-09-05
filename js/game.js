@@ -57,6 +57,11 @@ class Game {
             }
         });
         
+        // 调试信息：显示敌人数量
+        if (Math.floor(this.lastTime / 1000) % 2 === 0) {
+            console.log('敌人数量:', this.enemies.length, '生成器计时:', this.enemySpawner.spawnTimer.toFixed(2));
+        }
+        
         // 更新子弹
         this.bullets.forEach((bullet, index) => {
             bullet.update(this.deltaTime);
