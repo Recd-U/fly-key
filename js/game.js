@@ -7,6 +7,7 @@ class Game {
         this.bullets = [];
         this.enemyBullets = []; // 敌人子弹
         this.particles = []; // 粒子效果
+        this.powerUps = []; // 道具
         this.score = 0;
         this.gameOver = false;
         this.isPaused = false; // 暂停状态
@@ -94,6 +95,14 @@ class Game {
         // 更新粒子效果
         this.updateParticles(this.deltaTime);
 
+        // 更新道具
+        this.powerUps.forEach((powerUp, index) => {
+            powerUp.update(this.deltaTime);
+            if (powerUp.y > this.canvas.height) {
+                this.powerUps.splice(index, 1);
+            }
+        });
+
         // 更新敌人生成器
         this.enemySpawner.update(this.deltaTime);
 
@@ -109,6 +118,9 @@ class Game {
 
         // 更新游戏难度
         this.updateDifficulty();
+        
+        // 随机生成道具
+        this.spawnRandomPowerUp();
     }
 
     render() {
@@ -130,7 +142,8 @@ class Game {
         // 绘制敌人
         this.enemies.forEach(enemy => enemy.render(this.ctx));
 
-
+        // 绘制道具
+        this.powerUps.forEach(powerUp => powerUp.render(this.ctx));
 
         // 绘制玩家
         this.player.render(this.ctx);
@@ -159,19 +172,32 @@ class Game {
             this.ctx.fillText('特殊技能冷却', x, y - 5);
         }
 
-        // 绘制等级和经验
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = '14px Arial';
-        this.ctx.fillText(`等级: ${this.player.level}`, 20, 80);
-        this.ctx.fillText(`经验: ${this.player.exp}/${this.player.expToNextLevel}`, 20, 100);
+        // 绘制左上角信息面板 - 向下移动50像素以避免重叠
+        const panelY = 65; // 从15改为65
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(15, panelY, 180, 130);
+
+        // 绘制边框
+        this.ctx.strokeStyle = '#4ecdc4';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(15, panelY, 180, 130);
+
+        // 设置科技感字体
+        this.ctx.font = 'bold 16px "Orbitron", "Arial", sans-serif';
+        this.ctx.fillStyle = '#4ecdc4';
+
+        // 绘制等级和经验 - 调整Y坐标
+        this.ctx.fillText(`等级: ${this.player.level}`, 30, panelY + 30);
+        this.ctx.fillText(`经验: ${this.player.exp}/${this.player.expToNextLevel}`, 30, panelY + 55);
 
         // 绘制波次信息
-        this.ctx.fillText(`波次: ${this.enemySpawner.wave}`, 20, 120);
+        this.ctx.fillText(`波次: ${this.enemySpawner.wave}`, 30, panelY + 80);
+
         // 确保waveDuration和waveTimer是有效数值
         const waveDuration = isFinite(this.enemySpawner.waveDuration) ? this.enemySpawner.waveDuration : 30;
         const waveTimer = isFinite(this.enemySpawner.waveTimer) ? this.enemySpawner.waveTimer : 0;
         const waveTimeLeft = waveDuration - waveTimer;
-        this.ctx.fillText(`下一波: ${isFinite(waveTimeLeft) ? waveTimeLeft.toFixed(1) : '0.0'}秒`, 20, 140);
+        this.ctx.fillText(`下一波: ${isFinite(waveTimeLeft) ? waveTimeLeft.toFixed(1) : '0.0'}秒`, 30, panelY + 105);
 
         // 绘制波次结束倒计时消息
         if (this.showWaveEndMessage) {
@@ -223,6 +249,18 @@ class Game {
 
         // 调整敌人属性
         this.enemySpawner.difficulty = this.difficultyLevel;
+    }
+
+    // 随机生成道具
+    spawnRandomPowerUp() {
+        // 1%的概率生成道具
+        if (Math.random() < 0.01) {
+            const powerUpTypes = ['health', 'speed', 'fireRate', 'damage'];
+            const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+            const x = Math.random() * (this.canvas.width - 20);
+            const powerUp = new PowerUp(x, -20, randomType, this);
+            this.powerUps.push(powerUp);
+        }
     }
 
     // 暂停/继续游戏

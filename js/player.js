@@ -105,6 +105,9 @@ class Player {
             
             const bullet = new Bullet(bulletX, bulletY);
             
+            // 设置子弹伤害
+            bullet.damage = 1;
+            
             // 高级子弹有角度偏移
             if (bulletCount > 1) {
                 bullet.angle = angleOffset;
@@ -172,6 +175,15 @@ class Player {
         // 升级奖励
         this.health = this.maxHealth;
         this.shootRate = Math.max(0.1, this.shootRate - 0.02);
+        
+        // 更新现有子弹伤害
+        this.game.bullets.forEach(bullet => {
+            if (this.level >= 3) {
+                bullet.damage = 2;
+                bullet.color = '#ff6b6b';
+            }
+        });
+        
         this.createLevelUpEffect();
     }
     
@@ -311,18 +323,24 @@ class Player {
         }
     }
     
-    createLevelUpEffect() {
-        // 升级效果
-        for (let i = 0; i < 30; i++) {
-            this.game.particles.push({
-                x: this.x + this.width / 2,
-                y: this.y + this.height / 2,
-                vx: (Math.random() - 0.5) * 200,
-                vy: -Math.random() * 300 - 100,
-                life: 1.5,
-                color: '#ffd700',
-                size: Math.random() * 4 + 3
-            });
+    // 处理道具效果
+    applyPowerUp(type) {
+        switch (type) {
+            case 'health':
+                this.health = Math.min(this.maxHealth, this.health + 20);
+                break;
+            case 'speed':
+                this.speed += 50;
+                break;
+            case 'fireRate':
+                this.shootRate = Math.max(0.05, this.shootRate - 0.02);
+                break;
+            case 'damage':
+                // 增加子弹伤害
+                this.game.bullets.forEach(bullet => {
+                    bullet.damage += 1;
+                });
+                break;
         }
     }
 }

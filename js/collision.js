@@ -150,6 +150,18 @@ class CollisionManager {
                 }
             }
         }
+
+        // 玩家与道具碰撞
+        if (this.game.powerUps) {
+            for (let i = this.game.powerUps.length - 1; i >= 0; i--) {
+                if (checkCollision(this.game.player, this.game.powerUps[i])) {
+                    this.collisions.push({
+                        type: 'player-powerup',
+                        powerUpIndex: i
+                    });
+                }
+            }
+        }
     }
     
     // 处理所有碰撞
@@ -194,6 +206,14 @@ class CollisionManager {
                 case 'bullet-enemy-bullet':
                     bulletsToRemove.add(collision.playerBulletIndex);
                     enemyBulletsToRemove.add(collision.enemyBulletIndex);
+                    break;
+                
+                case 'player-powerup':
+                    // 应用道具效果
+                    const powerUp = this.game.powerUps[collision.powerUpIndex];
+                    this.game.player.applyPowerUp(powerUp.type);
+                    // 移除道具
+                    this.game.powerUps.splice(collision.powerUpIndex, 1);
                     break;
             }
         }

@@ -80,6 +80,33 @@ class Enemy {
         ];
 
         this.pattern = patterns[Math.floor(Math.random() * patterns.length)];
+
+        // BOSS使用专门的移动模式
+        if (this.isBoss) {
+            this.pattern = (deltaTime) => this.bossBattlePattern(deltaTime);
+        }
+    }
+
+    bossBattlePattern(deltaTime) {
+        // BOSS战专用移动模式
+        const centerX = this.game.canvas.width / 2;
+        const amplitude = 100; // 水平移动幅度
+        const frequency = 0.5; // 移动频率
+        
+        // 水平移动（正弦波）
+        this.x = centerX + Math.sin(this.time * frequency) * amplitude - this.width / 2;
+        
+        // 缓慢向下移动，但不能移出屏幕底部
+        this.y += this.speed * 0.3 * deltaTime;
+        
+        // 边界检查
+        this.x = Math.max(0, Math.min(this.x, this.game.canvas.width - this.width));
+        this.y = Math.max(0, Math.min(this.y, this.game.canvas.height - this.height));
+        
+        // 额外检查：如果BOSS接近底部，则停止向下移动
+        if (this.y > this.game.canvas.height - this.height - 50) {
+            this.y = this.game.canvas.height - this.height - 50;
+        }
     }
 
     update(deltaTime) {
@@ -263,6 +290,23 @@ class Enemy {
         ctx.fill();
     }
 
+    renderElite(ctx) {
+        // 绘制精英敌人（紫色三角形）
+        ctx.fillStyle = '#9b59b6';
+        ctx.beginPath();
+        ctx.moveTo(this.x + this.width / 2, this.y);
+        ctx.lineTo(this.x + this.width, this.y + this.height);
+        ctx.lineTo(this.x, this.y + this.height);
+        ctx.closePath();
+        ctx.fill();
+
+        // 绘制内部细节
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
     takeDamage(amount) {
         this.health -= amount;
         this.hitEffectTimer = 0.2; // 受伤闪烁时间
@@ -270,7 +314,17 @@ class Enemy {
         // 受伤粒子效果
         this.createHitParticles();
 
-        return this.health <= 0;
+        if (this.health <= 0) {
+            // BOSS被击败后随机掉落道具
+            if (this.isBoss) {
+                const powerUpTypes = ['health', 'speed', 'fireRate', 'damage'];
+                const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+                const powerUp = new PowerUp(this.x + this.width / 2, this.y + this.height / 2, randomType, this.game);
+                this.game.powerUps.push(powerUp);
+            }
+            return true;
+        }
+        return false;
     }
 
     shoot() {
@@ -393,37 +447,62 @@ class Enemy {
             ctx.fillStyle = healthPercent > 0.6 ? '#00ff00' :
                 healthPercent > 0.3 ? '#ffff00' : '#ff0000';
             ctx.fillRect(this.x, this.y - 10, barWidth * healthPercent, barHeight);
-
-            // 边框
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.strokeRect(this.x, this.y - 10, barWidth, barHeight);
-        }
-    }
-
-    renderElite(ctx) {
-        // 精英敌人渲染
-        ctx.beginPath();
-        ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 精英标识
-        ctx.fillStyle = '#ffd700';
-        ctx.beginPath();
-        ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 能量光环
-        if (Math.floor(Date.now() / 200) % 2 === 0) {
-            ctx.strokeStyle = 'rgba(255, 107, 107, 0.7)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2 + 3, 0, Math.PI * 2);
-            ctx.stroke();
         }
     }
 }
 
-// 敌人子弹类
+// 道具类
+class PowerUp {
+    constructor(x, y, type, game) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.game = game;
+        this.width = 20;
+        this.height = 20;
+        this.speed = 100;
+        this.color = this.getColorByType(type);
+    }
+
+    getColorByType(type) {
+        switch (type) {
+            case 'health': return '#ff0000';
+            case 'speed': return '#00ff00';
+            case 'fireRate': return '#0000ff';
+            case 'damage': return '#ffff00';
+            default: return '#ffffff';
+        }
+    }
+
+    update(deltaTime) {
+        this.y += this.speed * deltaTime;
+    }
+
+    render(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 绘制图标
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        let symbol = '?';
+        switch (this.type) {
+            case 'health': symbol = 'H'; break;
+            case 'speed': symbol = 'S'; break;
+            case 'fireRate': symbol = 'F'; break;
+            case 'damage': symbol = 'D'; break;
+        }
+        
+        ctx.fillText(symbol, this.x + this.width / 2, this.y + this.height / 2);
+    }
+}
+
+// 子弹类
 class EnemyBullet {
     constructor(x, y, enemy) {
         this.x = x;
@@ -580,6 +659,12 @@ class EnemySpawner {
     }
 
     spawnBoss() {
+        // 检查是否已经存在BOSS
+        const existingBoss = this.game.enemies.find(enemy => enemy.type === 'boss');
+        if (existingBoss) {
+            return; // 如果已经存在BOSS，则不生成新的
+        }
+        
         const x = this.game.canvas.width / 2 - 60;
         const boss = new Enemy(x, -50, 'boss', this.game);
 
@@ -636,35 +721,35 @@ class EnemySpawner {
             // 波次结束，开始3秒倒计时
             this.waveEndTimer = 3.0;
             this.waveTimer = 0;
-            
+
             // 显示波次结束提示
             this.game.showWaveEndMessage = true;
             this.game.waveEndMessage = `第${this.wave}波结束！下一波倒计时：3秒`;
         }
-        
+
         // 处理波次结束倒计时
         if (this.waveEndTimer > 0) {
             this.waveEndTimer -= deltaTime;
-            
+
             // 更新倒计时消息
             const countdown = Math.ceil(this.waveEndTimer);
             this.game.waveEndMessage = `第${this.wave}波结束！下一波倒计时：${countdown}秒`;
-            
+
             if (this.waveEndTimer <= 0) {
                 // 倒计时结束，开始新波次
                 this.wave++;
                 this.waveEndTimer = 0;
                 this.waveDuration = Math.max(15, 30 - (this.wave - 1) * 2); // 波次时间递减
-                
+
                 // 每波开始时重置BOSS生成标志
                 this.bossSpawned = false;
-                
+
                 // 隐藏波次结束提示
                 this.game.showWaveEndMessage = false;
-                
+
                 // 波次开始特效
                 this.createWaveStartEffect();
-                
+
                 // 增加难度：减少生成间隔，增加敌人属性
                 this.spawnInterval = Math.max(0.5, 2 - (this.wave - 1) * 0.1);
                 this.difficulty = 1 + Math.floor(this.wave / 2);
